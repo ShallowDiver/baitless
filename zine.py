@@ -520,6 +520,9 @@ def p_others():
 
 # Every code sized 172 units: the longest URL needs 37 modules, which lands at
 # 0.50 mm per printed module after the 0.94 shrink. Decode-test any change.
+# Row geometry is shared with makepdf.py, which lays an invisible link
+# annotation over each row in the two screen PDFs.
+SCAN_Y0, SCAN_DY, SCAN_SZ = 242, 186, 172
 SCANS = [("https://shallowdiver.github.io/cityrats/", "NYC RAT DENSITY MAP",
           ["Find likely poison locations."]),
          ("https://www.nyc.gov/site/dsny/what-we-do/programs/safe-disposal-events.page",
@@ -541,12 +544,12 @@ def p_back():
                          "Wash your hands when you are done."], 17, 22)
     c += rule(56, 196, W - 56, 3)
     c += txt(36, 224, "SCAN THESE", 22, "bold", BK, "start", "1")
-    y = 242
+    y = SCAN_Y0
     for url, label, body in SCANS:
-        c += qr(36, y, 172, url)
+        c += qr(36, y, SCAN_SZ, url)
         c += txt(224, y + 24, label, 18, "bold")
         c += lines(224, y + 52, body, 17, 22)
-        y += 186
+        y += SCAN_DY
     c += rule(56, 796, W - 56, 3)
     c += lines(W / 2, 826,
                ["FOR THE BETTERMENT OF ALL BEINGS THROUGHOUT THE LIGHT CONE",

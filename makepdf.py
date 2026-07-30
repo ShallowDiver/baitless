@@ -11,8 +11,9 @@ about 18x smaller, which keeps the committed PDFs from bloating git history.
 Everything geometric below is unchanged from the raster version: same grid, same
 demarcations, same cut, same calibration hooks."""
 import cairosvg, pypdf, io
-from zine import PAGES, document
-from parts import W, H
+from pypdf.annotations import Link
+from zine import PAGES, document, SAFE, SCANS, SCAN_Y0, SCAN_DY, SCAN_SZ
+from parts import W, H, BK, WH, GY1, GY2, GY3
 
 PT = 72.0
 PGW, PGH = 2.75 * PT, 4.25 * PT          # one panel, 198 x 306 pt
@@ -26,15 +27,52 @@ SX, SY = cw / W, ch / H
 
 # ---------------------------------------------------------------- READ, screen
 # One page per panel, in reading order. cairosvg emits a single page per call,
-# so render eight and merge.
-merged = pypdf.PdfWriter()
-for inner in PAGES:
-    buf = io.BytesIO()
-    cairosvg.svg2pdf(bytestring=document(inner, size=(f"{PGW}pt", f"{PGH}pt")).encode(),
-                     write_to=buf)
-    merged.append(pypdf.PdfReader(io.BytesIO(buf.getvalue())))
-with open("Bait_Station_Field_Guide_READ.pdf", "wb") as f:
-    merged.write(f)
+# so render eight and merge. Each SCAN THESE row on the last page gets an
+# invisible link annotation (Border 0) covering code and text, so a reader on a
+# phone can tap the row instead of trying to scan a code on their own screen.
+# Annotations add no ink, so they do not count as a change to the zine.
+def scan_links(writer):
+    def pt(xu, yu):
+        xs, ys = W / 2 + SAFE * (xu - W / 2), H / 2 + SAFE * (yu - H / 2)
+        return xs * PGW / W, PGH - ys * PGH / H
+    for i, (url, _, _) in enumerate(SCANS):
+        yu = SCAN_Y0 + i * SCAN_DY
+        x0, y0 = pt(36, yu + SCAN_SZ)
+        x1, y1 = pt(W - 36, yu)
+        writer.add_annotation(page_number=7,
+                              annotation=Link(rect=(x0, y0, x1, y1), url=url))
+
+def screen_pdf(name, recolor=lambda svg: svg):
+    w = pypdf.PdfWriter()
+    for inner in PAGES:
+        buf = io.BytesIO()
+        cairosvg.svg2pdf(bytestring=recolor(document(inner, size=(f"{PGW}pt", f"{PGH}pt"))).encode(),
+                         write_to=buf)
+        w.append(pypdf.PdfReader(io.BytesIO(buf.getvalue())))
+    scan_links(w)
+    with open(name, "wb") as f:
+        w.write(f)
+
+screen_pdf("Bait_Station_Field_Guide_READ.pdf")
+
+# ---------------------------------------------------------------- NIGHT, screen
+# The READ pages with the palette remapped for reading in the dark: soft gray
+# ink on true black, so the page does not blind you at night. Every color in
+# the zine flows through the five palette constants, so a string substitution
+# on the finished SVG is exact. The mapping keeps the grays in the same order
+# relative to ink and paper that they have in daylight (v -> 192 * (1 - v/255),
+# the straight line through both ends). QR codes invert with everything else:
+# light modules on black, which current phone scanners read.
+# BK must be replaced BEFORE WH: WH's target is #000000, and running WH first
+# would let the BK pass repaint the fresh background as ink.
+NIGHT = {BK: "#c0c0c0", WH: "#000000", GY1: "#1f1f1f", GY2: "#424242", GY3: "#6f6f6f"}
+
+def night(svg):
+    for old, new in NIGHT.items():
+        svg = svg.replace(old, new)
+    return svg
+
+screen_pdf("Bait_Station_Field_Guide_NIGHT.pdf", night)
 
 # --------------------------------------------------------------- PRINT, imposed
 # Sized for NATURAL folding: hot dog, then hamburger twice. That only registers

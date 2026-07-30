@@ -8,8 +8,12 @@ each one. Current version 0.3.3, printed on the cover.
 
 - `Bait_Station_Field_Guide_PRINT.pdf` — the fold-and-cut sheet.
 - `Bait_Station_Field_Guide_READ.pdf` — 8 sequential pages for screen.
+- `Bait_Station_Field_Guide_NIGHT.pdf` — the same 8 pages in dark mode, gray on
+  true black, for reading at night.
 
-Both PDFs are committed to this repo because the site serves them directly.
+In both screen PDFs the SCAN THESE rows on the last page are tappable links.
+
+The PDFs are committed to this repo because the site serves them directly.
 
 ## Print
 
@@ -26,9 +30,9 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 ```
 
 `pdftoppm` comes from poppler-utils. `build.sh` renders the panels, runs the
-safe-zone and copy checks, writes both PDFs, and decode-tests all three QR
-codes off a 300 dpi render of the print sheet. A build that fails any step is
-not done.
+safe-zone and copy checks, writes the PDFs, and decode-tests all three QR
+codes off 300 dpi renders of both the print sheet and the night PDF's QR page.
+A build that fails any step is not done.
 
 ## Layout
 

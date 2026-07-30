@@ -266,7 +266,12 @@ def qr(x, y, size, data, border=2):
                       error_correction=qrcode.constants.ERROR_CORRECT_L)
     q.add_data(data); q.make(fit=True)
     m = q.get_matrix(); n = len(m); cell = size / n
-    out = f'<rect x="{x}" y="{y}" width="{size}" height="{size}" fill="{WH}"/>'
+    # The backing rect runs 2 modules past the code on every side, taking the
+    # quiet zone from border=2 up to the 4 the spec wants. Invisible on white
+    # paper; on the NIGHT page it guarantees a uniform zone around the code.
+    pad = 2 * cell
+    out = (f'<rect x="{x-pad:.2f}" y="{y-pad:.2f}" '
+           f'width="{size+2*pad:.2f}" height="{size+2*pad:.2f}" fill="{WH}"/>')
     for r in range(n):
         c = 0
         while c < n:
