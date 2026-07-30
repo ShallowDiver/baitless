@@ -1,0 +1,6 @@
+__pycache__/
+out/
+sheet*.png
+*.pdf
+*_proof.png
+*zoom*.png

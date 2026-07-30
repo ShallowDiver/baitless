@@ -1,0 +1,6 @@
+cairosvg
+reportlab
+qrcode
+Pillow
+numpy
+opencv-python-headless
