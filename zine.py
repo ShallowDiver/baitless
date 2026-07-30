@@ -6,10 +6,21 @@ SAFE = 0.94   # shrink panel content about its center so nothing lands in the
               # printer's unprintable margin or gets lost in a slightly off fold
 
 def wrap(c, bg=WH):
-    return (f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}">'
-            f'<rect width="{W}" height="{H}" fill="{bg}"/>{DEFS}'
+    """Panel content in panel units, with the SAFE shrink applied about the
+       center. Deliberately NOT an <svg> element: makepdf.py nests eight of these
+       in one sheet SVG to impose the print sheet as vector, and a bare group is
+       what can carry the needed translate/scale/rotate. Use document() for a
+       standalone file. DEFS is emitted by the container, not per panel, so eight
+       nested copies cannot collide on pattern ids."""
+    return (f'<rect width="{W}" height="{H}" fill="{bg}"/>'
             f'<g transform="translate({W/2},{H/2}) scale({SAFE}) '
-            f'translate({-W/2},{-H/2})">{c}</g></svg>')
+            f'translate({-W/2},{-H/2})">{c}</g>')
+
+def document(inner, size=None):
+    """One panel as a standalone SVG file."""
+    dim = f' width="{size[0]}" height="{size[1]}"' if size else ''
+    return (f'<svg xmlns="http://www.w3.org/2000/svg"{dim} '
+            f'viewBox="0 0 {W} {H}">{DEFS}{inner}</svg>')
 
 def rpoly(pts, r=16):
     n = len(pts); d = ""
@@ -268,6 +279,20 @@ def rat(x, y, s=1.0, flip=False):
     return f'<g transform="translate({x},{y}) scale({sx},{s})">{g}</g>'
 
 # ==================================================================== PANELS
+# Hard-wrapped against real DejaVu Sans metrics at size 17: widest line 521 of
+# the 528 units between the 36-unit margins. Rewrap, never shrink.
+WHY = ["NYC and most cities use an excruciating class of poisons",
+       "called anticoagulants to kill rats and mice slowly, over days",
+       "or weeks of internal bleeding. The poison is deadly to the",
+       "rats and mice themselves, and often to the animals who eat",
+       "them. For all that suffering, it lowers the number of rodents",
+       "only a little, because the population is capped mainly by",
+       "territory and food, not by poison. Killing the adults only gives",
+       "the survivors room to breed, so it may even mean more very",
+       "young rats, fighting and starving over the same scraps.",
+       "These stations are a blight on any city that uses them.",
+       "If you can legally remove one, do."]
+
 def p_cover():
     c = box(34, 34, W - 68, 172, BK, 0)
     c += txt(W / 2, 108, "THE BAIT STATION", 42, "bold", WH, "middle", "1")
@@ -276,15 +301,13 @@ def p_cover():
     c += f'<g transform="translate(424,296) scale(0.85)">{poison()}</g>'
     c += rat(380, 372, 0.52)
     c += rule(56, 434, W - 56, 4)
-    c += txt(W / 2, 466, "ONE, TWO, THREE, FOUR...", 22, "bold", BK, "middle", "2")
+    c += txt(W / 2, 462, "ONE, TWO, THREE, FOUR...", 22, "bold", BK, "middle", "2")
     for i, ef in enumerate([end_lp, end_evo, end_aegis, end_vm]):
         cx = 108 + i * 128
-        c += detail(cx, 530, 38, ef)
-    c += rule(56, 628, W - 56, 4)
-    c += txt(W / 2, 656, "FIND LIKELY POISON LOCATIONS BY SCANNING", 17, "bold", BK, "middle", "0.5")
-    c += qr(216, 668, 168, "https://shallowdiver.github.io/cityrats/")
-    c += txt(W / 2, 864, "NYC RAT DENSITY MAP", 19, "bold", BK, "middle", "1")
-    c += txt(W / 2, 892, "guide version 0.2.8", 14, "normal", BK, "middle")
+        c += detail(cx, 520, 36, ef)
+    c += rule(56, 572, W - 56, 4)
+    c += lines(36, 618, WHY, 17, 22)   # no header, the paragraph stands alone
+    c += txt(W / 2, 892, "guide version 0.3.1", 14, "normal", BK, "middle")
     return wrap(c)
 
 MATCH = [(side_lp, end_lp, "PROTECTA LP",
@@ -318,9 +341,8 @@ def p_keys():
         c += txt(272, cy - 12, name, 20, "bold")
         c += lines(272, cy + 16, note, 17, 22)
     c += rule(36, 796, W - 36, 4)
-    c += txt(W / 2, 826, "Color helps too: brass, black, black, gray.", 18, "normal", BK, "middle")
-    c += txt(W / 2, 858, "All four keys sell as one cheap pack online.", 18, "normal", BK, "middle")
-    c += txt(W / 2, 884, 'Search "bait station keys".', 18, "bold", BK, "middle")
+    c += txt(W / 2, 842, "All four keys sell as one cheap pack online.", 18, "normal", BK, "middle")
+    c += txt(W / 2, 872, 'Search "bait station keys".', 18, "bold", BK, "middle")
     return wrap(c)
 
 def station_panel(no, title, sub, art_fn, chips, spot, hole_fn, key_fn, key_name, key_sub,
@@ -485,43 +507,39 @@ def p_others():
     c += detail(508, 686, 30, hole_none, dashed=True)
     c += txt(68, 688, "NO KEYHOLE AT ALL.", 20, "bold")
     c += lines(68, 712, ["It just opens. Some get", "zip-tied or screwed shut."], 17, 21)
-    c += rule(36, 762, W - 36, 4)
-    c += lines(36, 798, ["For anything else, read the hole and not the box.",
-                         "Two slots at 90 degrees is the brass fork. A wiggly",
-                         "slot is EVO. A slot with a round bulge is Aegis.",
-                         "Twin turned slots are VM. A hex socket wants an Allen key."],
-               17, 26)
     return wrap(c)
 
+# Every code sized 172 units: the longest URL needs 37 modules, which lands at
+# 0.50 mm per printed module after the 0.94 shrink. Decode-test any change.
+SCANS = [("https://shallowdiver.github.io/cityrats/", "NYC RAT DENSITY MAP",
+          ["Find likely poison locations."]),
+         ("https://www.nyc.gov/site/dsny/what-we-do/programs/safe-disposal-events.page",
+          "SAFE DISPOSAL EVENTS",
+          ["Double bag anything you take out and",
+           "bring it to a NYC SAFE Disposal Event.",
+           "If you cannot, put the bagged bait in",
+           "the trash."]),
+         ("https://shallowdiver.github.io/baitless", "PRINT ANOTHER COPY",
+          ["Both PDFs plus the fold and cut",
+           "instructions. Print at 100 percent,",
+           "never fit to page."])]
+
 def p_back():
-    c = txt(W / 2, 80, "WHICH WAY?", 32, "bold", BK, "middle", "2")
-    c += rule(56, 102, W - 56, 5)
-    rows = [(ic_lever, "LP", ["down, then lever the key", "AWAY from the box"]),
-            (ic_push_in, "EVO", ["straight in, no turn at all"]),
-            (ic_turn, "AEGIS", ["in narrow-way, then twist"]),
-            (ic_turn_arrow, "EZ-K", ["press down, turn toward the", "arrow, then pull it BACK"]),
-            (ic_hex, "JT EATON", ["hex key counterclockwise", "(part XHEXKEY-G)"]),
-            (ic_hand, "TOMCAT", ["no key, it just opens"])]
-    y = 132
-    for fn, name, body in rows:
-        two = len(body) > 1
-        c += icon(fn, 74, y + (8 if two else 0), 0.76)
-        c += txt(112, y + 4, name, 19, "bold")
-        c += lines(220, y + 4, body, 17, 23)
-        y += 66 if two else 50
-    c += rule(56, y - 4, W - 56, 4)
-    c += txt(W / 2, y + 26, "GLOVES ON BEFORE YOU START", 18, "bold", BK, "middle", "1")
-    c += lines(W / 2, y + 52, ["A new lock is stiff and loosens with use.",
-                               "Wash your hands when you are done."], 17, 22, "normal", BK, "middle")
-    c += rule(56, y + 88, W - 56, 3)
-    c += txt(W / 2, y + 116, "THE BAIT YOU TAKE OUT", 18, "bold", BK, "middle", "1")
-    c += qr(52, y + 132, 168, "https://www.nyc.gov/site/dsny/what-we-do/programs/safe-disposal-events.page")
-    c += txt(136, y + 324, "SAFE DISPOSAL EVENTS", 14, "bold", BK, "middle", "0.5")
-    c += lines(236, y + 168, ["Double bag anything you", "take out. Bring it to a NYC",
-                              "SAFE Disposal Event if you", "can. If not, put the",
-                              "bagged bait in the trash."], 17, 22)
-    c += rule(56, y + 344, W - 56, 3)
-    c += lines(W / 2, y + 374,
+    c = txt(W / 2, 78, "LAST THINGS", 32, "bold", BK, "middle", "2")
+    c += rule(56, 100, W - 56, 5)
+    c += txt(36, 132, "GLOVES ON BEFORE YOU START", 19, "bold")
+    c += lines(36, 158, ["A new lock is stiff and loosens with use.",
+                         "Wash your hands when you are done."], 17, 22)
+    c += rule(56, 196, W - 56, 3)
+    c += txt(36, 224, "SCAN THESE", 22, "bold", BK, "start", "1")
+    y = 242
+    for url, label, body in SCANS:
+        c += qr(36, y, 172, url)
+        c += txt(224, y + 24, label, 18, "bold")
+        c += lines(224, y + 52, body, 17, 22)
+        y += 186
+    c += rule(56, 796, W - 56, 3)
+    c += lines(W / 2, 826,
                ["FOR THE BETTERMENT OF ALL BEINGS THROUGHOUT THE LIGHT CONE",
                 "UNTIL THE LAST PANG OF SUFFERING HAS FOREVER FADED",
                 "AND DEATH IS NO MORE"], 14, 22, "normal", BK, "middle")
@@ -532,7 +550,8 @@ PAGES = [p_cover(), p_keys(), p_lp(), p_evo(), p_aegis(), p_ezk(), p_others(), p
 if __name__ == "__main__":
     import cairosvg
     os.makedirs("out", exist_ok=True)
-    for i, svg in enumerate(PAGES):
+    for i, inner in enumerate(PAGES):
+        svg = document(inner)
         open(f"out/panel_{i}.svg", "w").write(svg)
         cairosvg.svg2png(bytestring=svg.encode(), write_to=f"out/panel_{i}.png",
                          output_width=W * 2, output_height=H * 2)

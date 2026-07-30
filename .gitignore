@@ -1,6 +1,10 @@
 __pycache__/
 out/
 sheet*.png
+.venv/
 *.pdf
+# the two build outputs are served by GitHub Pages, so they are tracked
+!Bait_Station_Field_Guide_PRINT.pdf
+!Bait_Station_Field_Guide_READ.pdf
 *_proof.png
 *zoom*.png

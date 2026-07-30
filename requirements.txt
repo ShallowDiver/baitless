@@ -1,5 +1,6 @@
 cairosvg
-reportlab
+pypdf
+reportlab   # only calibrate.py still needs this; the zine PDFs are pure cairosvg
 qrcode
 Pillow
 numpy
