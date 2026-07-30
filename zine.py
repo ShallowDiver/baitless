@@ -300,6 +300,9 @@ def p_cover():
     c += f'<g transform="translate(86,216) scale(0.52)">{st_lp()}</g>'
     c += f'<g transform="translate(424,296) scale(0.85)">{poison()}</g>'
     c += rat(380, 372, 0.52)
+    # Snapped chain in the clear band under the station and left of the rat.
+    # t=5.0 to sit with the solid-black rat and skull rather than beside them.
+    c += f'<g transform="translate(182,388) scale(1.15)">{chain_break(t=5.0)}</g>'
     c += rule(56, 434, W - 56, 4)
     c += txt(W / 2, 462, "ONE, TWO, THREE, FOUR...", 22, "bold", BK, "middle", "2")
     for i, ef in enumerate([end_lp, end_evo, end_aegis, end_vm]):
@@ -307,7 +310,7 @@ def p_cover():
         c += detail(cx, 520, 36, ef)
     c += rule(56, 572, W - 56, 4)
     c += lines(36, 618, WHY, 17, 22)   # no header, the paragraph stands alone
-    c += txt(W / 2, 892, "guide version 0.3.1", 14, "normal", BK, "middle")
+    c += txt(W / 2, 892, "guide version 0.3.2", 14, "normal", BK, "middle")
     return wrap(c)
 
 MATCH = [(side_lp, end_lp, "PROTECTA LP",
@@ -520,12 +523,12 @@ SCANS = [("https://shallowdiver.github.io/cityrats/", "NYC RAT DENSITY MAP",
            "If you cannot, put the bagged bait in",
            "the trash."]),
          ("https://shallowdiver.github.io/baitless", "PRINT ANOTHER COPY",
-          ["Both PDFs plus the fold and cut",
-           "instructions. Print at 100 percent,",
-           "never fit to page."])]
+          ["One to read on a screen, one to print",
+           "and fold, plus how to fold it. Print at",
+           "100 percent, never fit to page."])]
 
 def p_back():
-    c = txt(W / 2, 78, "LAST THINGS", 32, "bold", BK, "middle", "2")
+    c = txt(W / 2, 78, "FINAL NOTES", 32, "bold", BK, "middle", "2")
     c += rule(56, 100, W - 56, 5)
     c += txt(36, 132, "GLOVES ON BEFORE YOU START", 19, "bold")
     c += lines(36, 158, ["A new lock is stiff and loosens with use.",

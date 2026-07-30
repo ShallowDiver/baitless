@@ -300,6 +300,61 @@ def poison():
           f'stroke="{WH}" stroke-width="2.4"/>')
     return g
 
+# ==================================================== BROKEN CHAIN (cover art)
+def _link(cx, cy, rx, ry, t, hw=2.6):
+    """One chain link, as a STROKED ellipse rather than a filled ring. That is the
+       whole trick: the white underlay is the same ellipse stroked wider, so it
+       follows the ring's contour and notches a neighbor only where this link's
+       metal actually crosses it. A solid white ellipse underlay instead eats the
+       previous link's far side and the row reads as a line of C shapes.
+       hw is how far the notch extends past the metal on each side; keep it small,
+       around 2 to 3 units, or the notch swallows the whole end of the link."""
+    e = f'<ellipse cx="{cx:.2f}" cy="{cy:.2f}" rx="{rx:.2f}" ry="{ry:.2f}" fill="none"'
+    g = f'{e} stroke="{WH}" stroke-width="{t+2*hw:.2f}"/>' if hw else ""
+    return g + f'{e} stroke="{BK}" stroke-width="{t:.2f}"/>'
+
+def _arc(cx, cy, rx, ry, a0, a1, t, hw=0):
+    """A thick elliptical arc, sampled as a polyline so there is no large/sweep
+       flag arithmetic to get wrong."""
+    n = max(10, int(abs(a1 - a0) / 5))
+    pts = [(cx + rx * math.cos(math.radians(a0 + (a1-a0)*i/n)),
+            cy + ry * math.sin(math.radians(a0 + (a1-a0)*i/n))) for i in range(n+1)]
+    d = "M " + " L ".join(f"{x:.2f} {y:.2f}" for x, y in pts)
+    g = (f'<path d="{d}" fill="none" stroke="{WH}" stroke-width="{t+2*hw}" '
+         f'stroke-linecap="round"/>') if hw else ""
+    return g + (f'<path d="{d}" fill="none" stroke="{BK}" stroke-width="{t}" '
+                f'stroke-linecap="round" stroke-linejoin="round"/>')
+
+def chain_break(n=3, rx=16, ry=10.5, rn=6.5, t=4.2, pitch=26, gap=32,
+                alt=True, burst=True, splay=16, dx=6, hw=0):
+    """A chain snapped in the middle, running horizontally, origin AT the break.
+       Alternating wide and narrow ellipses is how a chain reads flat: a link
+       turned 90 degrees about the chain axis keeps its length but loses almost
+       all its height.
+
+       hw defaults to 0, meaning NO white notch where links cross, and that is
+       deliberate. Notching was tried at 2.2, 2.6 and 3.0 and every value cuts the
+       links open into a row of C shapes, because near its end an ellipse runs
+       nearly vertical, so even a narrow notch sweeps a wide bite out of the
+       neighbor. Letting the strokes simply cross reads as interlocked, and the
+       wide/narrow alternation carries the depth on its own."""
+    g = ""
+    for side in (-1, 1):
+        for i in range(n - 1, -1, -1):     # far link first, so nearer ones sit over it
+            cx = side * (gap / 2 + rx + i * pitch)
+            g += _link(cx, 0, rx, (ry if i % 2 == 0 else rn) if alt else ry, t, hw)
+    for side in (-1, 1):                   # the snapped link, two halves bent apart
+        a0, a1 = (90, 270) if side < 0 else (-90, 90)
+        g += (f'<g transform="translate({side*dx},0) rotate({side*splay})">'
+              f'{_arc(0, 0, rx, ry, a0, a1, t, hw)}</g>')
+    if burst:
+        for a in (-52, 52, 128, -128):
+            ca, sa = math.cos(math.radians(a)), math.sin(math.radians(a))
+            g += (f'<line x1="{7*ca:.1f}" y1="{7*sa:.1f}" x2="{15*ca:.1f}" '
+                  f'y2="{15*sa:.1f}" stroke="{BK}" stroke-width="2.8" '
+                  f'stroke-linecap="round"/>')
+    return g
+
 def place(fn, x, y, s=1.0, rot=0):
     r = f' rotate({rot})' if rot else ''
     return f'<g transform="translate({x},{y}) scale({s}){r}">{fn()}</g>'
