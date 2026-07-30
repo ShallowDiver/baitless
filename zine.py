@@ -279,6 +279,12 @@ def rat(x, y, s=1.0, flip=False):
     return f'<g transform="translate({x},{y}) scale({sx},{s})">{g}</g>'
 
 # ==================================================================== PANELS
+# The cover's snapped chain: settings and placement. It lives in the clear band
+# below the station and left of the rat, at the rat's own height so the two read
+# as a pair. Kept as constants so chainproof.py can sweep them without editing
+# p_cover(). See drawing rule 7 before changing how links are drawn.
+CHAIN = dict(tilt=12, gapdeg=30, splay=2.4, t=4.6, bt=9.0)
+CHAIN_AT = (182, 385, 1.15)
 # Hard-wrapped against real DejaVu Sans metrics at size 17: widest line 521 of
 # the 528 units between the 36-unit margins. Rewrap, never shrink.
 WHY = ["NYC and most cities use an excruciating class of poisons",
@@ -301,8 +307,8 @@ def p_cover():
     c += f'<g transform="translate(424,296) scale(0.85)">{poison()}</g>'
     c += rat(380, 372, 0.52)
     # Snapped chain in the clear band under the station and left of the rat.
-    # t=5.0 to sit with the solid-black rat and skull rather than beside them.
-    c += f'<g transform="translate(182,388) scale(1.15)">{chain_break(t=5.0)}</g>'
+    c += (f'<g transform="translate({CHAIN_AT[0]},{CHAIN_AT[1]}) '
+          f'scale({CHAIN_AT[2]})">{chain_snap(**CHAIN)}</g>')
     c += rule(56, 434, W - 56, 4)
     c += txt(W / 2, 462, "ONE, TWO, THREE, FOUR...", 22, "bold", BK, "middle", "2")
     for i, ef in enumerate([end_lp, end_evo, end_aegis, end_vm]):
@@ -310,7 +316,7 @@ def p_cover():
         c += detail(cx, 520, 36, ef)
     c += rule(56, 572, W - 56, 4)
     c += lines(36, 618, WHY, 17, 22)   # no header, the paragraph stands alone
-    c += txt(W / 2, 892, "guide version 0.3.2", 14, "normal", BK, "middle")
+    c += txt(W / 2, 892, "guide version 0.3.3", 14, "normal", BK, "middle")
     return wrap(c)
 
 MATCH = [(side_lp, end_lp, "PROTECTA LP",

@@ -355,6 +355,103 @@ def chain_break(n=3, rx=16, ry=10.5, rn=6.5, t=4.2, pitch=26, gap=32,
                   f'stroke-linecap="round"/>')
     return g
 
+def _stadium(cx, cy, a, b, t):
+    """A chain link as a stadium ring: a rounded-rect outline whose end radius is
+       its own half-height, stroked. Reads as a loop with a visible hole, which a
+       thin ellipse does not once the hole closes up at print size."""
+    f = max(a - b, 0.1)
+    d = (f"M {cx-f:.2f} {cy-b:.2f} L {cx+f:.2f} {cy-b:.2f} "
+         f"A {b:.2f} {b:.2f} 0 0 1 {cx+f:.2f} {cy+b:.2f} "
+         f"L {cx-f:.2f} {cy+b:.2f} "
+         f"A {b:.2f} {b:.2f} 0 0 1 {cx-f:.2f} {cy-b:.2f} Z")
+    return (f'<path d="{d}" fill="none" stroke="{BK}" stroke-width="{t:.2f}" '
+            f'stroke-linejoin="round"/>')
+
+def _torn(cx, cy, a, b, t, opens=1, gapdeg=34, splay=2.4):
+    """The one link that failed. A stadium that keeps MOST of its loop and gaps only
+       at the tip on the break side, the two cut ends splayed apart.
+
+       Removing a whole end cap, which is what the first versions did, leaves 60
+       percent of a loop and reads as a bracket or a horseshoe, not as a broken
+       link. Here the gap spans only +/-gapdeg about the outer tip, so the eye still
+       completes the loop and sees it as torn open.
+
+       Drawn canonically with the gap facing RIGHT, then mirrored by transform for
+       opens=-1, which avoids the arc-sweep and cap-direction sign errors that made
+       every earlier attempt fold back on itself. `opens` must point AT the break:
+       a half sitting right of the break opens LEFT, so opens = -side."""
+    f = max(a - b, 0.1)
+    n = 13
+    P = []
+    for i in range(n + 1):                       # upper cut tip, up over the near cap
+        ang = math.radians(-gapdeg - (90 - gapdeg) * i / n)
+        P.append((f + b * math.cos(ang), b * math.sin(ang)))
+    P.append((-f, -b))                           # straight run along the top
+    for i in range(2 * n + 1):                   # far cap, bulging away from the break
+        ang = math.radians(-90 - 180 * i / (2 * n))
+        P.append((-f + b * math.cos(ang), b * math.sin(ang)))
+    P.append((f, b))                             # straight run back along the bottom
+    for i in range(n + 1):                       # down the near cap to the lower tip
+        ang = math.radians(90 - (90 - gapdeg) * i / n)
+        P.append((f + b * math.cos(ang), b * math.sin(ang)))
+    # splay the two cut ends apart, and tear them to unequal lengths
+    P[0] = (P[0][0] + splay * 0.7, P[0][1] - splay)
+    P[-1] = (P[-1][0] + splay * 0.4, P[-1][1] + splay * 0.65)
+    d = "M " + " L ".join(f"{x:.2f} {y:.2f}" for x, y in P)
+    g = (f'<path d="{d}" fill="none" stroke="{BK}" stroke-width="{t:.2f}" '
+         f'stroke-linecap="round" stroke-linejoin="round"/>')
+    mir = "" if opens > 0 else " scale(-1,1)"
+    return f'<g transform="translate({cx},{cy}){mir}">{g}</g>'
+
+# Shrapnel around the break, mostly thrown upward as in a real snap. Hardcoded
+# rather than random so every build draws it identically.
+# (dx, dy, size, rotation) relative to the break.
+_SHARDS = [(-5, -19, 2.4, 18), (4, -24, 1.9, -32), (12, -16, 2.2, 44),
+           (-13, -13, 1.8, -12), (18, -8, 1.7, 25), (-19, -5, 1.5, 60),
+           (7, -10, 1.4, -50), (22, -19, 1.6, 10), (-2, 11, 1.9, 30),
+           (11, 15, 1.5, -20), (-11, 13, 1.4, 55)]
+
+def _shard(x, y, s, rot):
+    p = [(-s, -s*0.78), (s*0.9, -s), (s, s*0.85), (-s*0.85, s)]
+    d = "M " + " L ".join(f"{u:.2f} {v:.2f}" for u, v in p) + " Z"
+    return f'<g transform="translate({x},{y}) rotate({rot})"><path d="{d}" fill="{BK}"/></g>'
+
+def chain_snap(n=3, a=17, b=12, bt=8.5, t=4.2, pitch=24, gap=26, tilt=10,
+               alt=True, debris=True, motion=True, broke=-1,
+               gapdeg=24, splay=2.0):
+    """A chain snapped in the middle. The two halves TILT APART about the break,
+       which is what makes it read as broken under tension rather than as a chain
+       with a gap in it. tilt>0 puts the break at the PEAK, halves falling away to
+       either side; tilt<0 sags into a V, which reads as slack, not snapped.
+
+       Links are stadium rings, and the narrower ones (bt) stay tall enough to keep
+       an open hole. A link squashed to a slit reads as a bead, which is what
+       killed the first attempt. Links simply CROSS with no white notch at the
+       crossing, see drawing rule 7.
+
+       ONLY ONE link breaks, on the side given by `broke`. A real chain fails at a
+       single link in a single place; tearing open the end link of BOTH halves reads
+       as two unrelated broken chains laid end to end. The other half simply ends in
+       an intact link, the one the failed link used to pass through."""
+    g = ""
+    for side in (-1, 1):
+        seg = ""
+        for i in range(n - 1, 0, -1):               # full links, far to near
+            cx = side * (gap / 2 + a + i * pitch)
+            seg += _stadium(cx, 0, a, (b if i % 2 == 0 else bt) if alt else b, t)
+        cx = side * (gap / 2 + a)                   # the innermost link
+        seg += (_torn(cx, 0, a, b, t, -side, gapdeg, splay) if side == broke
+                else _stadium(cx, 0, a, b, t))
+        g += f'<g transform="rotate({side * tilt})">{seg}</g>'
+    if motion:                                       # short speed ticks off the break
+        for dx, dy in ((-14, -24), (1, -28), (15, -23)):
+            g += (f'<line x1="{dx*0.66:.1f}" y1="{dy*0.66:.1f}" x2="{dx:.1f}" '
+                  f'y2="{dy:.1f}" stroke="{BK}" stroke-width="2.0" '
+                  f'stroke-linecap="round"/>')
+    if debris:
+        g += "".join(_shard(*s) for s in _SHARDS)
+    return g
+
 def place(fn, x, y, s=1.0, rot=0):
     r = f' rotate({rot})' if rot else ''
     return f'<g transform="translate({x},{y}) scale({s}){r}">{fn()}</g>'
