@@ -287,17 +287,32 @@ CHAIN = dict(tilt=12, gapdeg=30, splay=2.4, t=4.6, bt=9.0)
 CHAIN_AT = (182, 385, 1.15)
 # Hard-wrapped against real DejaVu Sans metrics at size 17: widest line 521 of
 # the 528 units between the 36-unit margins. Rewrap, never shrink.
-WHY = ["NYC and most cities use an excruciating class of poisons",
+WHY = ["NYC, like most cities, uses an excruciating class of poisons",
        "called anticoagulants to kill rats and mice slowly, over days",
        "or weeks of internal bleeding. The poison is deadly to the",
-       "rats and mice themselves, and often to the animals who eat",
-       "them. For all that suffering, it lowers the number of rodents",
+       "rodents themselves, and often to the animals who eat",
+       "them. For all that suffering, it lowers their numbers",
        "only a little, because the population is capped mainly by",
        "territory and food, not by poison. Killing the adults only gives",
        "the survivors room to breed, so it may even mean more very",
        "young rats, fighting and starving over the same scraps.",
+       "",
        "These stations are a blight on any city that uses them.",
-       "If you can legally remove one, do."]
+       "If you can legally remove the poison from one, do.",
+       "This guide will show you how to open them."]
+# A blank entry in WHY is a paragraph break, half a line rather than a whole
+# empty row. At 13 rows a full blank row ran the last line into the version.
+WHY_BREAK = 11
+
+def why_block(x, y, rows, size=17, lh=22):
+    c = ""
+    for r in rows:
+        if r:
+            c += txt(x, y, r, size)
+            y += lh
+        else:
+            y += WHY_BREAK
+    return c
 
 def p_cover():
     c = box(34, 34, W - 68, 172, BK, 0)
@@ -315,8 +330,8 @@ def p_cover():
         cx = 108 + i * 128
         c += detail(cx, 520, 36, ef)
     c += rule(56, 572, W - 56, 4)
-    c += lines(36, 618, WHY, 17, 22)   # no header, the paragraph stands alone
-    c += txt(W / 2, 892, "guide version 0.3.3", 14, "normal", BK, "middle")
+    c += why_block(36, 618, WHY)   # no header, the paragraph stands alone
+    c += txt(W / 2, 900, "guide version 0.3.4", 14, "normal", BK, "middle")
     return wrap(c)
 
 MATCH = [(side_lp, end_lp, "PROTECTA LP",
@@ -532,15 +547,15 @@ SCANS = [("https://shallowdiver.github.io/cityrats/", "NYC RAT DENSITY MAP",
            "If you cannot, put the bagged bait in",
            "the trash."]),
          ("https://shallowdiver.github.io/baitless", "PRINT ANOTHER COPY",
-          ["One to read on a screen, one to print",
-           "and fold, plus how to fold it. Print at",
-           "100 percent, never fit to page."])]
+          ["Read online or print at home,",
+           "with printing and folding",
+           "instructions."])]
 
 def p_back():
     c = txt(W / 2, 78, "FINAL NOTES", 32, "bold", BK, "middle", "2")
     c += rule(56, 100, W - 56, 5)
     c += txt(36, 132, "GLOVES ON BEFORE YOU START", 19, "bold")
-    c += lines(36, 158, ["A new lock is stiff and loosens with use.",
+    c += lines(36, 158, ["Double bag the bait before disposing of it.",
                          "Wash your hands when you are done."], 17, 22)
     c += rule(56, 196, W - 56, 3)
     c += txt(36, 224, "SCAN THESE", 22, "bold", BK, "start", "1")
