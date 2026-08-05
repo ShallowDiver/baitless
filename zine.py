@@ -331,7 +331,7 @@ def p_cover():
         c += detail(cx, 520, 36, ef)
     c += rule(56, 572, W - 56, 4)
     c += why_block(36, 618, WHY)   # no header, the paragraph stands alone
-    c += txt(W / 2, 900, "guide version 0.3.4", 14, "normal", BK, "middle")
+    c += txt(W / 2, 900, "guide version 0.3.5", 14, "normal", BK, "middle")
     return wrap(c)
 
 MATCH = [(side_lp, end_lp, "PROTECTA LP",
@@ -348,7 +348,7 @@ MATCH = [(side_lp, end_lp, "PROTECTA LP",
            "The tip is a plain oval."]),
          (side_vm, end_vm, "EZ-KLEAN",
           ["the VM key: GRAY fob. The same",
-           "prong twice, turned 180 deg.",
+           "prong twice, turned 30 deg.",
            "Not a mirror image"])]
 
 def p_keys():
@@ -487,7 +487,7 @@ def p_ezk():
         g = f'<g transform="translate({ox},{oy}) scale({s})">{st_ezk()}</g>'
         px, py = ring_pt(ox + 209 * s, oy + 126 * s, 92 * s, 50 * s, 344, y1)
         g += callout(px, py, 344, y1, "TWO slots, on TOP", 18, True)
-        g += lines(354, y1 + 24, ["the SAME slot twice,", "turned round 180 deg"], 17, 22)
+        g += lines(354, y1 + 24, ["the SAME slot twice,", "turned round 30 deg"], 17, 22)
         g += callout(ox + 246 * s, oy + 228 * s, 344, y2, "molded arrow", 18)
         g += txt(354, y2 + 24, "turn the way it points", 16, "normal")
         return g
@@ -498,11 +498,9 @@ def p_ezk():
          "each side, set opposite each other."],
         hole_vm, side_vm, "The VM key", "gray fob, twin prongs",
         [(ic_press, ["Both prongs into the two slots.", "Press down HARD and hold."]),
-         (ic_turn_arrow, ["Turn it 90 degrees, the way the", "molded arrow beside it points."]),
+         (ic_turn_arrow, ["Turn it 30 degrees, the way the", "molded arrow beside it points."]),
          (ic_pull_back, ["Tug it toward the BACK, then lift."])],
-        "Shut: press both sides till it clicks.",
-        banner=("ROTATIONAL, NOT MIRROR.",
-                "Turn the key 180 degrees and it still drops in."))
+        "Shut: press both sides till it clicks.")
 
 def p_others():
     c = header("6", "TWO ODD ONES", "neither takes a key off your ring")
