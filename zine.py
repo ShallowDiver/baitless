@@ -355,70 +355,69 @@ def p_cover():
     c += (f'<g transform="translate({CHAIN_AT[0]},{CHAIN_AT[1]}) '
           f'scale({CHAIN_AT[2]})">{chain_snap(**CHAIN)}</g>')
     c += rule(56, 434, W - 56, 4)
-    c += txt(W / 2, 458, "ONE, TWO, THREE, FOUR...", 22, "bold", BK, "middle", "2")
-    # Where to get them. This is the one thing the old LOOK DOWN THE KEY panel
-    # said that nothing else in the zine says, and a reader with four pictures
-    # and no source is stuck. It labels the ROW, not any one end view.
-    c += txt(W / 2, 482, 'all four sell as one cheap pack: search "bait station keys"',
-             15, "normal", BK, "middle")
+    c += txt(W / 2, 462, "ONE, TWO, THREE, FOUR...", 22, "bold", BK, "middle", "2")
     for i, ef in enumerate([end_lp, end_evo, end_aegis, end_vm]):
         cx = 108 + i * 128
-        c += detail(cx, 528, 34, ef)
+        c += detail(cx, 520, 36, ef)
     c += rule(56, 572, W - 56, 4)
     c += why_block(36, 618, WHY)   # no header, the paragraph stands alone
-    c += txt(W / 2, 900, "guide version 0.4.1", 14, "normal", BK, "middle")
+    c += txt(W / 2, 900, "guide version 0.4.3", 14, "normal", BK, "middle")
     return wrap(c)
 
-# The one page in the zine that is nothing but prose, and it does not fit at the
-# 17 body size, or at 16 either once the disposal sentences went in: 35 lines at
-# 16 runs the closing line onto the panel's bottom edge with no air under it, and
-# the only way to buy that back is tightening the leading to about 1.25, which
-# makes a wall of text worse to read, not better. So this block alone is set at
-# 15, the floor, with 21.5 of leading, which is a MORE open measure than the rest
-# of the zine, not a tighter one. That is the trade: a hair smaller, noticeably
-# easier to track across a 60 character line. Hard-wrapped against real DejaVu
-# Sans metrics: widest line 518 of the 528 units between the 36-unit margins.
-# Rewrap, never shrink further, 15 is the documented minimum.
+# The one page in the zine that is nothing but prose, and the only one whose
+# size is decided by arithmetic rather than by eye. 35 lines at 16 plus its
+# paragraph breaks and its closing line just barely fit between the header rule
+# and the safe zone, at 20.4 of leading. That is 1.275, tighter than the 1.32
+# the rest of the zine uses, and it is the whole budget: 17 would need a 1.15
+# leading, which no amount of reformatting reaches. Losing the rule above the
+# closing line is what bought the last two thirds of a line.
+# Hard-wrapped against real DejaVu Sans metrics: widest line 520 of the 528
+# units between the 36-unit margins. Rewrap, never shrink; if copy is ever added
+# to this page again, something else on it has to come out.
 # A blank entry is a paragraph break. Asterisks mark an italic run and are drawn
 # by rich(); the wrapper balances them per line, so one line may both open and
 # close a run.
 TACTICS = [
-    "Each bait station is different. Some are old and unused, some are",
-    "fresh and clean and full of poison. Some are hard to open and may",
-    "require A LOT of prying and elbow-grease (I'm looking at you,",
-    "Protecta LP!), and some may be zip-tied to a gate. Nearly all contain",
-    "something horrible. You should aim to become moderately familiar",
-    "with the kinds of locks you might encounter by looking through this",
-    "guide, but do not make the mistake of studying overly-much when",
-    "you ought to be outside, *learning by doing*.",
-    "",
-    "While you have every right to remove bait that you have the legal",
-    "authority to, you may at first feel a bit of wariness at actually doing",
-    "so. Because of that, it may be best to remove bait at night, where",
-    "there are fewer people to ask prying questions. Consider beforehand",
-    "what you'll say to anyone who asks one. Perhaps you are a",
-    "volunteer of some community organization, happy to clean up your",
-    "neighborhood. Rather ironically, wearing a high-viz vest will make",
-    "you completely invisible to most people.",
-    "",
-    "It may be helpful to carry a dim flashlight to aid in your duties. To",
-    "keep yourself clean, consider using (in addition to nitrile gloves) a",
-    "dog poop bag so you can manipulate things without soiling even",
-    "your gloved hands. The detractors of our furry friends are correct",
-    "that rodents are often quite dirty, and you should avoid contact with",
-    "surfaces they have touched. Put the poison directly into a trash bag,",
-    "then put that bag in another. Dispose of the whole thing in a",
-    "rat-proof bin, or better at a SAFE disposal event.",
-    "",
-    "Don't be overly afraid of the poison. It's very dilute, and you'd likely",
-    "need to actually EAT a lot for it to be dangerous. An exception is",
-    "certain powdered poisons, but still you'd need to consume/inhale an",
-    "appreciable amount for it to become worrisome. Just wash your",
-    "hands well with soap and water when you come home. That said,",
-    "I'm not responsible for your safety or the verification of any facts in",
-    "this guide: no one is but you.",
+    'Each bait station is different. Some are old and unused, some',
+    'are fresh and clean and full of poison. Some are hard to open',
+    "and may require A LOT of prying and elbow-grease (I'm looking",
+    'at you, Protecta LP!), and some may be zip-tied to a gate.',
+    'Nearly all contain something horrible. All four keys sell as one',
+    'cheap pack online: search "bait station keys". You should aim to',
+    'become moderately familiar with the kinds of locks you might',
+    'encounter by looking through this guide, but do not make the',
+    'mistake of studying overly-much when you ought to be outside,',
+    '*learning by doing*.',
+    '',
+    'While you have every right to remove bait that you have the',
+    'legal authority to, you may at first feel a bit of wariness at',
+    'actually doing so. Because of that, it may be best to remove',
+    'bait at night, where there are fewer people to ask prying',
+    "questions. Consider beforehand what you'll say to anyone who",
+    'asks one. Perhaps you are a volunteer of some community',
+    'organization, happy to clean up your neighborhood. Rather',
+    'ironically, wearing a high-viz vest will make you completely',
+    'invisible to most people.',
+    '',
+    'It may be helpful to carry a dim flashlight to aid in your duties.',
+    'To keep yourself clean, consider using (in addition to nitrile',
+    'gloves) a dog poop bag so you can manipulate things without',
+    'soiling even your gloved hands. The detractors of our furry',
+    'friends are correct that rodents are often quite dirty, and you',
+    'should avoid contact with surfaces they have touched. Put the',
+    'poison directly into a trash bag, then put that bag in another.',
+    'Dispose of the whole thing in a rat-proof bin, or better at a SAFE',
+    'disposal event.',
+    '',
+    "Don't be overly afraid of the poison. It's very dilute, and you'd",
+    'likely need to actually EAT a lot for it to be dangerous. An',
+    "exception is certain powdered poisons, but still you'd need to",
+    'consume/inhale an appreciable amount for it to become',
+    'worrisome. Just wash your hands well with soap and water when',
+    "you come home. That said, I'm not responsible for your safety or",
+    'the verification of any facts in this guide: no one is but you.',
 ]
-TAC_SIZE, TAC_LH, TAC_BREAK = 15, 21.5, 11
+TAC_SIZE, TAC_LH, TAC_BREAK = 16, 20.4, 10
 
 def p_tactics():
     c = header("1", "FIELD TACTICS", "read this once, then go out")
@@ -429,8 +428,11 @@ def p_tactics():
             y += TAC_LH
         else:
             y += TAC_BREAK
-    c += rule(56, y + 16, W - 56, 3)
-    c += txt(W / 2, y + 46, "If you've read this far, now is the time to act.",
+    # No rule above the closing line. The rule plus the air it needs cost about
+    # 14 units, two thirds of a line, which is what the page had to give back to
+    # carry the body at 16 instead of 15. Centered and bold still sets the line
+    # apart on its own.
+    c += txt(W / 2, y + 14, "If you've read this far, now is the time to act.",
              17, "bold", BK, "middle")
     return wrap(c)
 

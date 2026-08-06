@@ -2,7 +2,7 @@
 
 An 8-panel black-and-white fold-and-cut mini-zine (one landscape US Letter
 sheet) for identifying rat bait stations, matching the right key, and opening
-each one. Current version 0.4.1, printed on the cover.
+each one. Current version 0.4.3, printed on the cover.
 
 **Download and fold instructions: https://shallowdiver.github.io/baitless**
 
