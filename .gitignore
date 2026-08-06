@@ -2,6 +2,7 @@ __pycache__/
 out/
 sheet*.png
 night*.png
+read*.png
 .venv/
 *.pdf
 # the build outputs are served by GitHub Pages, so they are tracked

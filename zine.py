@@ -230,6 +230,36 @@ def st_ezk():
     g += arc_arrow(209, 224, 46, 205, 25, BK, 6, 15)
     return g
 
+# B&G RODENT CAFE , 10-1/2 x 10-1/2 x 3-1/2 in. SQUARE seen from the top, and
+# that squareness is the whole tell: everything else in this guide is a long
+# rectangle or a triangle. The two FRONT corners are cut off square across, the
+# two BACK corners are rounded, and the lid is on real hinges along the back.
+# Two small slots sit side by side in the top face just inside the front edge.
+BG_OFF = (66, 38)   # same oblique sweep as the EZ-Klean, so the side wall opens
+BG_FACE = ('M 95 325 L 265 325 L 330 260 L 330 95 Q 330 40 275 40 '
+           'L 85 40 Q 30 40 30 95 L 30 260 Z')
+BG_RIGHT = [(330, 95), (330, 260), (265, 325)]     # right wall + right chamfer
+BG_BB = (30, 40, 396, 363)
+
+def bg_slots(x, y, s=0.72):
+    """The pair of slots, drawn from the same geometry as the key's end view."""
+    return f'<g transform="translate({x},{y}) scale({s})">{hole_bg()}</g>'
+
+def st_bg():
+    g  = band(BG_RIGHT, BG_OFF, GY2)
+    g += band([(265, 325), (95, 325)], BG_OFF, GY1)             # front wall
+    g += (f'<path d="{BG_FACE}" fill="{WH}" stroke="{BK}" stroke-width="4" '
+          f'stroke-linejoin="round"/>')                          # the lid
+    g += (f'<path d="M 70 60 L 290 60" stroke="{BK}" stroke-width="3.5" '
+          'fill="none"/>')                                       # hinges, along the back
+    # big arched doorway in the right side wall, its twin in the hidden left wall.
+    # Base on the floor edge, sides riding the sweep.
+    g += (f'<g transform="translate(396,222) matrix(0,1,0.866,0.499,0,0)">'
+          f'<path d="{archp(44, 46)}" transform="translate(0,-46)" fill="{BK}"/></g>')
+    g += bg_slots(180, 294, 1.25)
+    g += ring(180, 294, 56, 32)
+    return g
+
 # JT EATON 902 , a TALL VERTICAL station. Twist-off cap, one hex screw.
 JTE_BODY = [(0, 330), (0, 78), (168, 78), (168, 330)]
 JTE_CAP  = [(30, 78), (30, 0), (138, 0), (138, 78)]
@@ -325,48 +355,83 @@ def p_cover():
     c += (f'<g transform="translate({CHAIN_AT[0]},{CHAIN_AT[1]}) '
           f'scale({CHAIN_AT[2]})">{chain_snap(**CHAIN)}</g>')
     c += rule(56, 434, W - 56, 4)
-    c += txt(W / 2, 462, "ONE, TWO, THREE, FOUR...", 22, "bold", BK, "middle", "2")
+    c += txt(W / 2, 458, "ONE, TWO, THREE, FOUR...", 22, "bold", BK, "middle", "2")
+    # Where to get them. This is the one thing the old LOOK DOWN THE KEY panel
+    # said that nothing else in the zine says, and a reader with four pictures
+    # and no source is stuck. It labels the ROW, not any one end view.
+    c += txt(W / 2, 482, 'all four sell as one cheap pack: search "bait station keys"',
+             15, "normal", BK, "middle")
     for i, ef in enumerate([end_lp, end_evo, end_aegis, end_vm]):
         cx = 108 + i * 128
-        c += detail(cx, 520, 36, ef)
+        c += detail(cx, 528, 34, ef)
     c += rule(56, 572, W - 56, 4)
     c += why_block(36, 618, WHY)   # no header, the paragraph stands alone
-    c += txt(W / 2, 900, "guide version 0.3.5", 14, "normal", BK, "middle")
+    c += txt(W / 2, 900, "guide version 0.4.1", 14, "normal", BK, "middle")
     return wrap(c)
 
-MATCH = [(side_lp, end_lp, "PROTECTA LP",
-          ["the 2-prong key: flat BRASS",
-           "fork, tips at 90 degrees",
-           "to each other"]),
-         (side_evo, end_evo, "PROTECTA EVO",
-          ["the EVO key: BLACK arched tab.",
-           "The end is one WIGGLY ribbon,",
-           "not separate fins"]),
-         (side_aegis, end_aegis, "AEGIS RP",
-          ["the Aegis key: BLACK, ribbed.",
-           "The big oval is a GRIP hole.",
-           "The tip is a plain oval."]),
-         (side_vm, end_vm, "EZ-KLEAN",
-          ["the VM key: GRAY fob. The same",
-           "prong twice, turned 30 deg.",
-           "Not a mirror image"])]
+# The one page in the zine that is nothing but prose, and it does not fit at the
+# 17 body size, or at 16 either once the disposal sentences went in: 35 lines at
+# 16 runs the closing line onto the panel's bottom edge with no air under it, and
+# the only way to buy that back is tightening the leading to about 1.25, which
+# makes a wall of text worse to read, not better. So this block alone is set at
+# 15, the floor, with 21.5 of leading, which is a MORE open measure than the rest
+# of the zine, not a tighter one. That is the trade: a hair smaller, noticeably
+# easier to track across a 60 character line. Hard-wrapped against real DejaVu
+# Sans metrics: widest line 518 of the 528 units between the 36-unit margins.
+# Rewrap, never shrink further, 15 is the documented minimum.
+# A blank entry is a paragraph break. Asterisks mark an italic run and are drawn
+# by rich(); the wrapper balances them per line, so one line may both open and
+# close a run.
+TACTICS = [
+    "Each bait station is different. Some are old and unused, some are",
+    "fresh and clean and full of poison. Some are hard to open and may",
+    "require A LOT of prying and elbow-grease (I'm looking at you,",
+    "Protecta LP!), and some may be zip-tied to a gate. Nearly all contain",
+    "something horrible. You should aim to become moderately familiar",
+    "with the kinds of locks you might encounter by looking through this",
+    "guide, but do not make the mistake of studying overly-much when",
+    "you ought to be outside, *learning by doing*.",
+    "",
+    "While you have every right to remove bait that you have the legal",
+    "authority to, you may at first feel a bit of wariness at actually doing",
+    "so. Because of that, it may be best to remove bait at night, where",
+    "there are fewer people to ask prying questions. Consider beforehand",
+    "what you'll say to anyone who asks one. Perhaps you are a",
+    "volunteer of some community organization, happy to clean up your",
+    "neighborhood. Rather ironically, wearing a high-viz vest will make",
+    "you completely invisible to most people.",
+    "",
+    "It may be helpful to carry a dim flashlight to aid in your duties. To",
+    "keep yourself clean, consider using (in addition to nitrile gloves) a",
+    "dog poop bag so you can manipulate things without soiling even",
+    "your gloved hands. The detractors of our furry friends are correct",
+    "that rodents are often quite dirty, and you should avoid contact with",
+    "surfaces they have touched. Put the poison directly into a trash bag,",
+    "then put that bag in another. Dispose of the whole thing in a",
+    "rat-proof bin, or better at a SAFE disposal event.",
+    "",
+    "Don't be overly afraid of the poison. It's very dilute, and you'd likely",
+    "need to actually EAT a lot for it to be dangerous. An exception is",
+    "certain powdered poisons, but still you'd need to consume/inhale an",
+    "appreciable amount for it to become worrisome. Just wash your",
+    "hands well with soap and water when you come home. That said,",
+    "I'm not responsible for your safety or the verification of any facts in",
+    "this guide: no one is but you.",
+]
+TAC_SIZE, TAC_LH, TAC_BREAK = 15, 21.5, 11
 
-def p_keys():
-    c = header("1", "LOOK DOWN THE KEY", "side and end view of each", 35)
-    c += txt(86, 156, "SIDE", 17, "bold", BK, "middle", "1")
-    c += txt(208, 156, "END VIEW", 17, "bold", BK, "middle", "1")
-    c += rule(36, 170, W - 36, 3)
-    for i, (sf, ef, name, note) in enumerate(MATCH):
-        cy = 248 + i * 156
-        if i:
-            c += rule(36, cy - 78, W - 36, 1.5)
-        c += place(sf, 86, cy - 56, 0.44)
-        c += detail(208, cy, 44, ef)
-        c += txt(272, cy - 12, name, 20, "bold")
-        c += lines(272, cy + 16, note, 17, 22)
-    c += rule(36, 796, W - 36, 4)
-    c += txt(W / 2, 842, "All four keys sell as one cheap pack online.", 18, "normal", BK, "middle")
-    c += txt(W / 2, 872, 'Search "bait station keys".', 18, "bold", BK, "middle")
+def p_tactics():
+    c = header("1", "FIELD TACTICS", "read this once, then go out")
+    y = 140
+    for r in TACTICS:
+        if r:
+            c += rich(36, y, r, TAC_SIZE)
+            y += TAC_LH
+        else:
+            y += TAC_BREAK
+    c += rule(56, y + 16, W - 56, 3)
+    c += txt(W / 2, y + 46, "If you've read this far, now is the time to act.",
+             17, "bold", BK, "middle")
     return wrap(c)
 
 def station_panel(no, title, sub, art_fn, chips, spot, hole_fn, key_fn, key_name, key_sub,
@@ -503,32 +568,44 @@ def p_ezk():
         "Shut: press both sides till it clicks.")
 
 def p_others():
-    c = header("6", "TWO ODD ONES", "neither takes a key off your ring")
-    c += box(36, 124, W - 72, 292)
-    c += f'<g transform="translate(74,148) scale(0.58)">{st_jte()}</g>'
-    c += txt(232, 178, "JT EATON 902", 22, "bold")
-    c += lines(232, 208, ["It STANDS UP. Everything",
-                          "else here lies flat, so that",
-                          "alone tells you what it is.",
-                          "",
-                          "Bait hangs on a rod inside",
-                          "the tube. Two entries, low",
-                          "down, one on each side."], 17, 23)
-    c += detail(516, 172, 32, end_hex, dashed=True)
-    c += txt(516, 216, "hex socket", 15, "normal", BK, "middle")
-    c += box(36, 430, W - 72, 74, WH, 3)
-    c += icon(ic_hex, 80, 467, 0.76)
-    c += txt(118, 458, "ONE screw. Hex key COUNTERclockwise.", 18, "bold", BK)
-    c += txt(118, 484, "JT Eaton replacement part XHEXKEY-G.", 17, "normal", BK)
-    c += box(36, 520, W - 72, 218)
-    c += f'<g transform="translate(68,556) scale(0.44)">{st_tomcat()}</g>'
-    c += txt(252, 584, "TOMCAT RAT STATION", 20, "bold")
-    c += lines(252, 612, ["Squarish, about 6 in tall, a",
+    c = header("6", "THREE ODD ONES", "none of them takes a key from the pack")
+    # B&G RODENT CAFE goes first and gets the most room: unlike the other two it
+    # does take a key, just not one that comes in the pack, so it needs the motion
+    # spelled out and it needs to say where the printable file lives.
+    c += box(36, 124, W - 72, 340)
+    c += f'<g transform="translate(48,186) scale(0.40)">{st_bg()}</g>'
+    c += txt(222, 172, "B&G RODENT CAFE", 21, "bold")
+    c += lines(222, 200, ["SQUARE from above, the only",
+                          "one out here that is. Front",
+                          "corners cut off, back corners",
+                          "round, hinged along the back.",
+                          "Two small slots side by side",
+                          "just inside the front edge."], 17, 23)
+    c += rule(52, 348, W - 52, 3)
+    c += place(side_bg, 76, 368, 0.24)
+    c += txt(112, 376, "The key is a flat two-prong fork.", 17, "bold")
+    c += lines(112, 400, ["Prongs in, push DOWN hard, then push",
+                          "the key toward the BACK. Lift the lid."], 17, 22)
+    c += txt(112, 444, "3D print your own key: see QR code on back cover", 16)
+    c += box(36, 476, W - 72, 200)
+    c += f'<g transform="translate(58,514) scale(0.42)">{st_jte()}</g>'
+    c += txt(176, 512, "JT EATON 902", 21, "bold")
+    c += lines(176, 538, ["It STANDS UP. Everything else here",
+                          "lies flat, so that alone tells you",
+                          "what it is. Bait hangs on a rod",
+                          "inside the tube."], 17, 22)
+    c += detail(516, 520, 26, end_hex, dashed=True)
+    c += txt(160, 630, "ONE screw, hex key COUNTERclockwise.", 17, "bold")
+    c += txt(160, 654, "JT Eaton replacement part XHEXKEY-G.", 16)
+    c += box(36, 688, W - 72, 208)
+    c += f'<g transform="translate(56,732) scale(0.36)">{st_tomcat()}</g>'
+    c += txt(222, 730, "TOMCAT RAT STATION", 20, "bold")
+    c += lines(222, 756, ["Squarish, about 6 in tall, a",
                           "see-through window in the lid,",
-                          "and a molded living hinge."], 17, 23)
-    c += detail(508, 686, 30, hole_none, dashed=True)
-    c += txt(68, 688, "NO KEYHOLE AT ALL.", 20, "bold")
-    c += lines(68, 712, ["It just opens. Some get", "zip-tied or screwed shut."], 17, 21)
+                          "and a molded living hinge."], 17, 22)
+    c += detail(506, 852, 26, hole_none, dashed=True)
+    c += txt(64, 846, "NO KEYHOLE AT ALL.", 20, "bold")
+    c += txt(64, 872, "It just opens. Some get zip-tied or screwed shut.", 16)
     return wrap(c)
 
 # Every code sized 172 units: the longest URL needs 37 modules, which lands at
@@ -545,9 +622,10 @@ SCANS = [("https://shallowdiver.github.io/cityrats/", "NYC RAT DENSITY MAP",
            "If you cannot, put the bagged bait in",
            "the trash."]),
          ("https://shallowdiver.github.io/baitless", "PRINT ANOTHER COPY",
-          ["Read online or print at home,",
-           "with printing and folding",
-           "instructions."])]
+          ["Read online or print at home, with",
+           "printing and folding instructions.",
+           "The B&G key is there too, as a file",
+           "you can 3D print."])]
 
 def p_back():
     c = txt(W / 2, 78, "FINAL NOTES", 32, "bold", BK, "middle", "2")
@@ -570,7 +648,7 @@ def p_back():
                 "AND DEATH IS NO MORE"], 14, 22, "normal", BK, "middle")
     return wrap(c)
 
-PAGES = [p_cover(), p_keys(), p_lp(), p_evo(), p_aegis(), p_ezk(), p_others(), p_back()]
+PAGES = [p_cover(), p_tactics(), p_lp(), p_evo(), p_aegis(), p_ezk(), p_others(), p_back()]
 
 if __name__ == "__main__":
     import cairosvg

@@ -31,16 +31,21 @@ SX, SY = cw / W, ch / H
 # invisible link annotation (Border 0) covering code and text, so a reader on a
 # phone can tap the row instead of trying to scan a code on their own screen.
 # Annotations add no ink, so they do not count as a change to the zine.
-def scan_links(writer):
-    def pt(xu, yu):
-        xs, ys = W / 2 + SAFE * (xu - W / 2), H / 2 + SAFE * (yu - H / 2)
-        return xs * PGW / W, PGH - ys * PGH / H
+def scan_rows():
+    """The SCAN THESE rows in panel units, already through the SAFE shrink: code
+       plus its text, the whole strip. Shared by every PDF so the tappable area
+       and the printed row can never drift apart."""
     for i, (url, _, _) in enumerate(SCANS):
         yu = SCAN_Y0 + i * SCAN_DY
-        x0, y0 = pt(36, yu + SCAN_SZ)
-        x1, y1 = pt(W - 36, yu)
-        writer.add_annotation(page_number=7,
-                              annotation=Link(rect=(x0, y0, x1, y1), url=url))
+        shrink = lambda v, c: c + SAFE * (v - c)
+        yield (url, shrink(36, W / 2), shrink(yu, H / 2),
+               shrink(W - 36, W / 2), shrink(yu + SCAN_SZ, H / 2))
+
+def scan_links(writer):
+    for url, xa, ya, xb, yb in scan_rows():
+        writer.add_annotation(page_number=7, annotation=Link(
+            rect=(xa * PGW / W, PGH - yb * PGH / H,
+                  xb * PGW / W, PGH - ya * PGH / H), url=url))
 
 def screen_pdf(name, recolor=lambda svg: svg):
     w = pypdf.PdfWriter()
@@ -123,6 +128,34 @@ g += f'<line x1="{cw}" y1="{ch}" x2="{3*cw}" y2="{ch}" {L.format(2.0)}/>'
 sheet = (f'<svg xmlns="http://www.w3.org/2000/svg" width="11in" height="8.5in" '
          f'viewBox="0 0 {SW} {SH}">'
          f'<g transform="translate({CAL_DX_MM*MM},{-CAL_DY_MM*MM})">{g}</g></svg>')
-cairosvg.svg2pdf(bytestring=sheet.encode(),
-                 write_to="Bait_Station_Field_Guide_PRINT.pdf")
+
+# The imposed sheet gets the same invisible link over each SCAN THESE row as the
+# two screen PDFs. It costs no ink, so a printed copy is unchanged, but the sheet
+# is also what people read on a screen before they print it, and a code you have
+# to scan off your own display is a code you cannot use.
+#
+# The back panel is one cell of the grid, so a panel-unit point has to go through
+# the SAFE shrink, then the cell's scale and offset, then the 180 degree turn if
+# that cell is in the top row, then the calibration nudge, and finally PDF's
+# y-up space. Which cell it lands in is read off the imposition lists rather than
+# hardcoded, so reordering the sheet cannot silently move the links.
+BACK = len(PAGES)                          # the back panel's page number
+COL, ROW, FLIP = ((top.index(BACK), 0, True) if BACK in top
+                  else (bot.index(BACK), 1, False))
+
+def sheet_pt(xu, yu):
+    sx, sy = COL * cw + xu * SX, ROW * ch + yu * SY
+    if FLIP:                               # 180 degrees about the cell's center
+        sx, sy = 2 * COL * cw + cw - sx, 2 * ROW * ch + ch - sy
+    return sx + CAL_DX_MM * MM, SH - (sy - CAL_DY_MM * MM)
+
+buf = io.BytesIO()
+cairosvg.svg2pdf(bytestring=sheet.encode(), write_to=buf)
+w = pypdf.PdfWriter(clone_from=io.BytesIO(buf.getvalue()))
+for url, xa, ya, xb, yb in scan_rows():
+    (x0, y0), (x1, y1) = sheet_pt(xa, ya), sheet_pt(xb, yb)
+    w.add_annotation(page_number=0, annotation=Link(
+        rect=(min(x0, x1), min(y0, y1), max(x0, x1), max(y0, y1)), url=url))
+with open("Bait_Station_Field_Guide_PRINT.pdf", "wb") as f:
+    w.write(f)
 print("PDFs written")

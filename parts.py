@@ -38,6 +38,21 @@ def lines(x, y, rows, size=22, lh=None, w="normal", fill=BK, anchor="start"):
     lh = lh or int(size * 1.32)
     return "".join(txt(x, y + i * lh, r, size, w, fill, anchor) for i, r in enumerate(rows))
 
+def rich(x, y, s, size=22, w="normal", fill=BK, anchor="start"):
+    """One line of text in which *asterisks* mark an italic run. Splitting on the
+       marker alternates roman, italic, roman, so a line that opens inside an
+       italic phrase just has to start with a marker; the wrapper that produced
+       the lines balances them that way. DejaVu Sans has a real Oblique face, so
+       this is a font substitution, not a synthesized slant."""
+    parts = s.split("*")
+    out = (f'<text x="{x}" y="{y}" font-family="{F}" font-size="{size}" '
+           f'font-weight="{w}" fill="{fill}" text-anchor="{anchor}">')
+    for i, p in enumerate(parts):
+        if p:
+            st = ' font-style="italic"' if i % 2 else ''
+            out += f'<tspan{st}>{esc(p)}</tspan>'
+    return out + '</text>'
+
 def rule(x1, y, x2, sw=3, color=BK):
     return f'<line x1="{x1}" y1="{y}" x2="{x2}" y2="{y}" stroke="{color}" stroke-width="{sw}"/>'
 
@@ -163,6 +178,20 @@ def vm_pair(k=1.0):
 def end_vm():
     return vm_pair()
 
+# B&G RODENT CAFE. Everything here is measured off the STL the reader prints,
+# BandG_Rodent_Bait_Station_Cafe_Key.stl: a flat plate 34 x 64 x 6.8 mm. Slicing
+# it across the prongs gives two plain upright rectangles about 5 mm wide by the
+# full 6.8 mm of plate thickness, roughly 20 mm apart, so the end view is two
+# blocks standing on end and well apart. Nothing here is guessed.
+BG_W, BG_T, BG_GAP = 10.0, 13.7, 20.0    # prong width, thickness, center spacing
+
+def end_bg():
+    """Two plain upright blocks, side by side and parallel. Not angled to each
+       other like the LP's pair, not shaped like the VM's."""
+    return "".join(
+        f'<rect x="{s*BG_GAP - BG_W/2:.1f}" y="{-BG_T/2:.1f}" width="{BG_W}" '
+        f'height="{BG_T}" rx="2" fill="{BK}"/>' for s in (-1, 1))
+
 def end_hex():
     pts = [(20 * math.cos(math.radians(a)), 20 * math.sin(math.radians(a))) for a in range(0, 360, 60)]
     return '<path d="M ' + ' L '.join(f'{p[0]:.1f} {p[1]:.1f}' for p in pts) + f' Z" fill="{BK}"/>'
@@ -183,6 +212,12 @@ def hole_aegis():
 
 def hole_vm():
     return end_vm()
+
+def hole_bg():
+    """Two square-ish slots side by side, drawn a hair proud of the prongs."""
+    return "".join(
+        f'<rect x="{s*BG_GAP - BG_W/2 - 1:.1f}" y="{-BG_T/2 - 1:.1f}" '
+        f'width="{BG_W + 2}" height="{BG_T + 2}" rx="2" fill="{BK}"/>' for s in (-1, 1))
 
 def hole_none():
     return (f'<rect x="-13" y="-14" width="26" height="28" rx="5" fill="none" stroke="{BK}" stroke-width="3"/>'
@@ -258,6 +293,29 @@ def side_vm():
     g += (f'<rect x="38" y="200" width="22" height="56" rx="10" '
           f'fill="{WH}" stroke="{BK}" stroke-width="4"/>')
     return g
+
+# The B&G key's outline, TRACED off the printable STL rather than drawn by eye:
+# the solid was sliced at mid thickness, the resulting loop simplified to 0.13 mm,
+# and the points scaled by 3.85 units/mm and set head-up with the prongs down, to
+# match the other side views. The factory key carries a ribbed grip pad and a side
+# blade as well; the STL is the plain fork, so the plain fork is what is drawn.
+BG_PATH = ("M 65.5 62.9 L 65.1 163.4 L 43.1 242.4 L 41.0 246.4 L 38.0 246.4 "
+           "L 32.5 243.1 L 29.3 239.1 L 26.7 232.2 L 28.9 185.0 L 27.4 179.1 "
+           "L 24.9 174.4 L 18.6 168.2 L 12.8 165.6 L 6.2 164.5 L -10.6 164.5 "
+           "L -14.6 165.6 L -19.0 167.8 L -25.2 173.7 L -28.2 178.8 L -29.6 185.4 "
+           "L -25.6 217.9 L -25.6 230.0 L -26.3 234.0 L -30.0 240.6 L -33.3 243.9 "
+           "L -38.0 245.7 L -40.6 244.6 L -42.0 242.0 L -64.0 163.8 L -65.5 61.8 "
+           "L -64.0 52.6 L -61.1 42.8 L -56.7 33.3 L -52.3 26.7 L -43.1 16.8 "
+           "L -37.3 12.0 L -28.2 6.9 L -20.8 4.0 L -10.2 1.1 L -0.4 -0.0 "
+           "L 2.9 0.7 L 10.2 0.7 L 20.5 3.3 L 31.1 8.0 L 42.4 15.7 L 51.9 25.9 "
+           "L 57.8 35.1 L 62.5 46.4 L 65.5 62.9 Z")
+
+def side_bg():
+    """Flat plate. Arched head with a ring hole, then a deep U cut between two
+       prongs that taper to blunt points."""
+    return (f'<path d="{BG_PATH}" fill="{GY3}" stroke="{BK}" stroke-width="4" '
+            f'stroke-linejoin="round"/>'
+            f'<circle cx="-0.3" cy="24.4" r="9" fill="{WH}" stroke="{BK}" stroke-width="4"/>')
 
 def qr(x, y, size, data, border=2):
     """QR drawn as SVG rects. Keep `size` generous: modules want ~0.5mm on paper."""
